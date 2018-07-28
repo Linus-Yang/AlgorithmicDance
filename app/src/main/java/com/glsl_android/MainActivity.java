@@ -14,6 +14,7 @@ import com.glslutil.ShaderUtil;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.nio.ShortBuffer;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -37,33 +38,48 @@ public class MainActivity extends AppCompatActivity {
     private class GLRenderer implements GLSurfaceView.Renderer {
 
        private String mVertexShader = "#version 300 es        \n"
-               +        "  layout(location = 1)uniform mat4 uMatrix;                 \n "
+               +        "  layout(location = 1)uniform mat4 uMatrix;  \n "
                +        "  layout(location = 0) in vec4 a_position;  \n"
+               +        "  layout(location = 1) in vec3 a_color;    \n "
+               +        "   out vec4 o_color;                      \n "
                +        "  void main()                           \n"
                +        " {                                          \n"
                +        "    gl_Position = uMatrix * a_position; \n "
+               +        "     o_color =  vec4(a_color, 1.0);            \n  "
                +        " }                                          \n";
 
        private String mFragmentShader = "#version 300 es            \n "
                +        " precision mediump float;                  \n"
+               +        " in vec4 o_color;                               \n "
                +       "  layout(location = 0) out vec4 o_fragColor;  \n "
                +       " void main()                                  \n"
                +       " {                                            \n"
-               +       "    o_fragColor  = vec4(1.0, 0.0f, 0.0f, 1.0f);                   \n"
+               +       "    o_fragColor  = o_color;                   \n"
                +       " } ";
 
        private int mProgram = -1;
 
        private int VBO[] = new int[1];
-       private float[] vector = {-1.0f, -1.0f, 0.0f,
-                                 1.0f, -1.0f, 0.0f,
-                                 0.0f, 1.0f, 0.0f};
+       private int IBO[] = new int[1];
+                                       // xyz               rgb
+       private float[] vector = {-1.0f, -1.0f, 0.0f, 1.0f, 0.0f , 0.0f,
+                                 0.0f, -1.0f, 1.0f,  0.0f, 1.0f , 0.0f,
+                                 1.0f, -1.0f, 0.0f,  0.0f, 0.0f , 1.0f,
+                                 0.0f, 1.0f,  0.0f,   1f,   1f,    1f};
+
+       private  short indeces[] = {
+               0, 3, 1,
+               1, 3, 2,
+               2, 3, 0,
+               0, 1, 2
+        };
 
 
 
        private float scale = 0.0f;
        private FloatBuffer mVertexBuffer;
        private FloatBuffer mMatrix4Buffer;
+       private ShortBuffer mIndeceBuffer;
        private int gWordLocation;
 
         @Override
@@ -71,16 +87,29 @@ public class MainActivity extends AppCompatActivity {
             mVertexBuffer = ByteBuffer.allocateDirect(vector.length * 4).order(ByteOrder.nativeOrder())
                     .asFloatBuffer();
             mVertexBuffer.put(vector).position(0);
+            mIndeceBuffer = ByteBuffer.allocateDirect(indeces.length * 2).order(ByteOrder.nativeOrder())
+                    .asShortBuffer();
+            mIndeceBuffer.put(indeces).position(0);
 
 
           int  vertexShader = ShaderUtil.loadShader(GLES30.GL_VERTEX_SHADER, mVertexShader);
           int  fragmentShader = ShaderUtil.loadShader(GLES30.GL_FRAGMENT_SHADER, mFragmentShader);
           int program =  ShaderUtil.assembleProgram(vertexShader, fragmentShader);
+
           mProgram = program;
+
+          //VBO
           GLES30.glGenBuffers(1,VBO, 0);
           GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, VBO[0]);
           GLES30.glBufferData(GLES30.GL_ARRAY_BUFFER, vector.length * 4, mVertexBuffer, GLES30.GL_STATIC_DRAW);
           GLES30.glUseProgram(mProgram);
+
+
+          //VAO
+           GLES30.glGenBuffers(1, IBO, 0);
+           GLES30.glBindBuffer(GLES30.GL_ELEMENT_ARRAY_BUFFER, IBO[0]);
+           GLES30.glBufferData(GLES30.GL_ELEMENT_ARRAY_BUFFER, indeces.length * 2, mIndeceBuffer ,GLES30.GL_STATIC_DRAW);
+
 
             gWordLocation = GLES30.glGetUniformLocation(program, "uMatrix");
 
@@ -93,7 +122,6 @@ public class MainActivity extends AppCompatActivity {
                     .asFloatBuffer();
             mMatrix4Buffer.put(martix4).position(0);
 
-            System.out.println(gWordLocation+"=======ss");
 
 
         }
@@ -103,8 +131,6 @@ public class MainActivity extends AppCompatActivity {
             System.out.println("5:"+ matrxi[4] + "   6 : " + matrxi[5]  +"  7  "+ matrxi[6] +"  8: "+ matrxi[7]);
             System.out.println("9:"+ matrxi[8] + "   10 : " + matrxi[9]  +" 11  "+ matrxi[10] +"  12: "+ matrxi[11]);
             System.out.println("13:"+ matrxi[12] + "  14 : " + matrxi[13]  +"  15  "+ matrxi[14] +"  16: "+ matrxi[15]);
-
-
         }
 
         @Override
@@ -114,27 +140,34 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onDrawFrame(GL10 gl) {
-            GLES30.glClearColor(0, 1, 0, 1);
+            GLES30.glClearColor(0.4f, 0.1f, 0.7f, 1);
             GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT);
 
             scale += 0.01;
 
-            float[] martix4 = {1.0f, 0.0f, 0.0f, (float)Math.sin(scale),
-                               0.0f, 1.0f, 0.0f,  0.0f,
-                               0.0f, 0.0f , 1.0f ,0.0f,
-                               0.0f, 0.0f , 0.0f , 1.0f};
+            float[] martix4 = { (float) Math.cos(scale), 0.0f, -(float)Math.sin(scale),  0.0f,
+                                0.0f, 1.0f, 0.0f,  0.0f,
+                    (float)Math.sin(scale), 0.0f, (float)Math.cos(scale),  0.0f,
+                                0.0f, 0.0f, 0.0f, 1.0f};
 
+            Matrix.rotateM(martix4, 0, scale, 0, 1, 0);
 //            float[] martix4 = new float[16];
 //            Matrix.setIdentityM(martix4, 0);
 //            Matrix.translateM(martix4, 0, (float)Math.sin(scale), 0.0f, 0.0f);
 
-            GLES30.glUniformMatrix4fv(gWordLocation, 1, true, martix4, 0);
+            GLES30.glUniformMatrix4fv(gWordLocation, 1, false, martix4, 0);
             GLES30.glEnableVertexAttribArray(0);
+            GLES30.glEnableVertexAttribArray(1);
             GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, VBO[0]);
-            GLES30.glVertexAttribPointer ( 0, 3,
-                    GLES30.GL_FLOAT, false, 3 * 4, 0 );
-            GLES30.glDrawArrays(GLES30.GL_TRIANGLES, 0, 3);
+            GLES30.glVertexAttribPointer ( 0, 3, GLES30.GL_FLOAT, false, vector.length, 0 );
+            GLES30.glVertexAttribPointer(1, 3, GLES30.GL_FLOAT, false, vector.length, 3 * 4);
+
+            GLES30.glBindBuffer(GLES30.GL_ELEMENT_ARRAY_BUFFER, IBO[0]);
+            GLES30.glDrawElements(GLES30.GL_TRIANGLES, indeces.length, GLES30.GL_UNSIGNED_SHORT, 0);
+
+//            GLES30.glDrawArrays(GLES30.GL_TRIANGLES, 0, 3);
             GLES30.glDisableVertexAttribArray(0);
+            GLES30.glDisableVertexAttribArray(1);
         }
     }
 }
