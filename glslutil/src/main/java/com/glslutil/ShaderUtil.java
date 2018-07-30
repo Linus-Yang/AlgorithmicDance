@@ -39,6 +39,7 @@ public class ShaderUtil {
         checkError();
         GLES30.glLinkProgram(program);
         int[] mLinkStatus = mTempIntArray;
+        GLES30.glGetProgramiv(program, GLES30.GL_LINK_STATUS, mLinkStatus, 0);
         if(mLinkStatus[0] != GLES30.GL_TRUE) {
             Log.e(TAG, "Could not link program");
             Log.e(TAG, GLES30.glGetProgramInfoLog(program));
