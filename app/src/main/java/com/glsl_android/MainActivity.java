@@ -1,8 +1,5 @@
 package com.glsl_android;
 
-import android.graphics.Shader;
-import android.opengl.EGL14;
-import android.opengl.EGLDisplay;
 import android.opengl.GLES30;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
@@ -122,6 +119,12 @@ public class MainActivity extends AppCompatActivity {
                     .asFloatBuffer();
             mMatrix4Buffer.put(martix4).position(0);
 
+            GLES30.glFrontFace(GLES30.GL_CW);  //确定那个方向是前方
+            GLES30.glCullFace(GLES30.GL_BACK); //剔除背面
+            GLES30.glEnable(GLES30.GL_CULL_FACE); //开启剔除
+            GLES30.glDisable(GLES30.GL_CULL_FACE); //取消剔除
+            GLES30.glEnable(GLES30.GL_DEPTH_TEST);
+
 
 
         }
@@ -141,7 +144,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onDrawFrame(GL10 gl) {
             GLES30.glClearColor(0.4f, 0.1f, 0.7f, 1);
-            GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT);
+            GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT|GLES30.GL_DEPTH_BUFFER_BIT);
 
             scale += 0.01;
 
