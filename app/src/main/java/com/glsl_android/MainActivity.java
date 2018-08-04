@@ -71,9 +71,12 @@ public class MainActivity extends AppCompatActivity {
                0, 1, 2
         };
 
+       float[] martix4 = new float[16];
 
 
-       private float scale = 0.0f;
+
+
+        private float scale = 0.0f;
        private FloatBuffer mVertexBuffer;
        private FloatBuffer mMatrix4Buffer;
        private ShortBuffer mIndeceBuffer;
@@ -148,15 +151,11 @@ public class MainActivity extends AppCompatActivity {
 
             scale += 0.01;
 
-            float[] martix4 = { (float) Math.cos(scale), 0.0f, -(float)Math.sin(scale),  0.0f,
-                                0.0f, 1.0f, 0.0f,  0.0f,
-                    (float)Math.sin(scale), 0.0f, (float)Math.cos(scale),  0.0f,
-                                0.0f, 0.0f, 0.0f, 1.0f};
+            Matrix.setIdentityM(martix4, 0);
+            Matrix.scaleM(martix4, 0, (float) Math.sin(scale * 0.1f), (float) Math.sin(scale * 0.1f), (float) Math.sin(scale * 0.1));
+            Matrix.rotateM(martix4, 0,(float) Math.sin(scale) * 90, 1, 1, 1);
+            Matrix.translateM(martix4, 0, (float)Math.sin(scale), 0,0);
 
-            Matrix.rotateM(martix4, 0, scale, 0, 1, 0);
-//            float[] martix4 = new float[16];
-//            Matrix.setIdentityM(martix4, 0);
-//            Matrix.translateM(martix4, 0, (float)Math.sin(scale), 0.0f, 0.0f);
 
             GLES30.glUniformMatrix4fv(gWordLocation, 1, false, martix4, 0);
             GLES30.glEnableVertexAttribArray(0);
