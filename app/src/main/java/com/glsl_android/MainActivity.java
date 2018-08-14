@@ -71,15 +71,12 @@ public class MainActivity extends AppCompatActivity {
                0, 1, 2
         };
 
-       float[] martix4 = new float[16];
-
-
 
 
         private float scale = 0.0f;
        private FloatBuffer mVertexBuffer;
-       private FloatBuffer mMatrix4Buffer;
        private ShortBuffer mIndeceBuffer;
+       private Matrix4f mMatrix4f = null;
        private int gWordLocation;
 
         @Override
@@ -109,24 +106,16 @@ public class MainActivity extends AppCompatActivity {
            GLES30.glGenBuffers(1, IBO, 0);
            GLES30.glBindBuffer(GLES30.GL_ELEMENT_ARRAY_BUFFER, IBO[0]);
            GLES30.glBufferData(GLES30.GL_ELEMENT_ARRAY_BUFFER, indeces.length * 2, mIndeceBuffer ,GLES30.GL_STATIC_DRAW);
-
+           mMatrix4f  = new Matrix4f();
+           mMatrix4f.init();
 
             gWordLocation = GLES30.glGetUniformLocation(program, "uMatrix");
-
-            float[] martix4 = new float[16];
-            Matrix.setIdentityM(martix4, 0);
-            Matrix.translateM(martix4, 0, 0.4f, 0.0f, 0.0f);
-            printMatrix(martix4);
-
-            mMatrix4Buffer = ByteBuffer.allocateDirect(martix4.length * 4).order(ByteOrder.nativeOrder())
-                    .asFloatBuffer();
-            mMatrix4Buffer.put(martix4).position(0);
-
-            GLES30.glFrontFace(GLES30.GL_CW);  //确定那个方向是前方
-            GLES30.glCullFace(GLES30.GL_BACK); //剔除背面
-            GLES30.glEnable(GLES30.GL_CULL_FACE); //开启剔除
-            GLES30.glDisable(GLES30.GL_CULL_FACE); //取消剔除
-            GLES30.glEnable(GLES30.GL_DEPTH_TEST);
+//
+//            GLES30.glFrontFace(GLES30.GL_CW);  //确定那个方向是前方
+//            GLES30.glCullFace(GLES30.GL_BACK); //剔除背面
+//            GLES30.glEnable(GLES30.GL_CULL_FACE); //开启剔除
+//            GLES30.glDisable(GLES30.GL_CULL_FACE); //取消剔除
+//            GLES30.glEnable(GLES30.GL_DEPTH_TEST);
 
 
 
@@ -149,15 +138,11 @@ public class MainActivity extends AppCompatActivity {
             GLES30.glClearColor(0.4f, 0.1f, 0.7f, 1);
             GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT|GLES30.GL_DEPTH_BUFFER_BIT);
 
-            scale += 0.01;
+            scale += 0.0001;
+            mMatrix4f.transform((float)Math.sin(scale), 0, 0);
+            mMatrix4f.rotate(scale, 0, 0, 1);
 
-            Matrix.setIdentityM(martix4, 0);
-            Matrix.scaleM(martix4, 0, (float) Math.sin(scale * 0.1f), (float) Math.sin(scale * 0.1f), (float) Math.sin(scale * 0.1));
-            Matrix.rotateM(martix4, 0,(float) Math.sin(scale) * 90, 1, 1, 1);
-            Matrix.translateM(martix4, 0, (float)Math.sin(scale), 0,0);
-
-
-            GLES30.glUniformMatrix4fv(gWordLocation, 1, false, martix4, 0);
+            GLES30.glUniformMatrix4fv(gWordLocation, 1, false, mMatrix4f.getMatrix(), 0);
             GLES30.glEnableVertexAttribArray(0);
             GLES30.glEnableVertexAttribArray(1);
             GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, VBO[0]);
