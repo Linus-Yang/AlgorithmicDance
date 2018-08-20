@@ -71,12 +71,11 @@ public class MainActivity extends AppCompatActivity {
                0, 1, 2
         };
 
-
+       private float[] mMMatrix = new float[16];
 
         private float scale = 0.0f;
        private FloatBuffer mVertexBuffer;
        private ShortBuffer mIndeceBuffer;
-       private Matrix4f mMatrix4f = null;
        private int gWordLocation;
 
         @Override
@@ -106,11 +105,11 @@ public class MainActivity extends AppCompatActivity {
            GLES30.glGenBuffers(1, IBO, 0);
            GLES30.glBindBuffer(GLES30.GL_ELEMENT_ARRAY_BUFFER, IBO[0]);
            GLES30.glBufferData(GLES30.GL_ELEMENT_ARRAY_BUFFER, indeces.length * 2, mIndeceBuffer ,GLES30.GL_STATIC_DRAW);
-           mMatrix4f  = new Matrix4f();
-           mMatrix4f.init();
 
             gWordLocation = GLES30.glGetUniformLocation(program, "uMatrix");
-//
+
+            Matrix.setIdentityM(mMMatrix, 0);
+
 //            GLES30.glFrontFace(GLES30.GL_CW);  //确定那个方向是前方
 //            GLES30.glCullFace(GLES30.GL_BACK); //剔除背面
 //            GLES30.glEnable(GLES30.GL_CULL_FACE); //开启剔除
@@ -139,10 +138,8 @@ public class MainActivity extends AppCompatActivity {
             GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT|GLES30.GL_DEPTH_BUFFER_BIT);
 
             scale += 0.0001;
-            mMatrix4f.transform((float)Math.sin(scale), 0, 0);
-            mMatrix4f.rotate(scale, 0, 0, 1);
-
-            GLES30.glUniformMatrix4fv(gWordLocation, 1, false, mMatrix4f.getMatrix(), 0);
+//            Matrix.rotateM(mMMatrix, 0, scale, 1, 0, 0);
+            GLES30.glUniformMatrix4fv(gWordLocation, 1, false, mMMatrix, 0);
             GLES30.glEnableVertexAttribArray(0);
             GLES30.glEnableVertexAttribArray(1);
             GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, VBO[0]);
