@@ -5,6 +5,7 @@ import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.widget.Button;
 
 import com.glslutil.ShaderUtil;
 
@@ -19,6 +20,11 @@ import javax.microedition.khronos.opengles.GL10;
 public class MainActivity extends AppCompatActivity {
 
     private GLSurfaceView mGLSurfaceView;
+    private boolean isModeAdd = true;
+    private int speed = 1;
+    private int x;
+    private int y;
+    private int z;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,6 +34,49 @@ public class MainActivity extends AppCompatActivity {
         mGLSurfaceView.setEGLContextClientVersion(3);
         mGLSurfaceView.setRenderer(new GLRenderer());
         mGLSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
+
+        findViewById(R.id.bt_mode).setOnClickListener((v)->{
+            Button b = (Button) v;
+            if(b.getText().equals("模式+")) {
+                b.setText("模式-");
+                isModeAdd = false;
+            } else {
+                b.setText("模式+");
+                isModeAdd = true;
+            }
+        });
+
+        findViewById(R.id.bt_x).setOnClickListener((v)->{
+            if(isModeAdd) {
+                x += speed;
+            } else {
+                x -= speed ;
+                if(x < 0) x = 0;
+            }
+
+            System.out.println("x:"+x);
+        });
+
+        findViewById(R.id.bt_y).setOnClickListener((v)->{
+            if(isModeAdd) {
+                y += speed;
+            } else {
+                y -= speed ;
+                if(y < 0) y = 0;
+            }
+
+            System.out.println("y"+y);
+        });
+
+        findViewById(R.id.bt_z).setOnClickListener((v)->{
+            if(isModeAdd) {
+                z += speed;
+            } else {
+                z -= speed ;
+                if(z < 0) z = 0;
+            }
+            System.out.println("z:"+z);
+        });
 
     }
 
@@ -72,6 +121,9 @@ public class MainActivity extends AppCompatActivity {
         };
 
        private float[] mMMatrix = new float[16];
+       private float[] mViewMatrix = new float[16];
+       private float[] mPMatrix = new float[16];
+       private float[] mMVPMatrix = new float[16];
 
         private float scale = 0.0f;
        private FloatBuffer mVertexBuffer;
@@ -109,12 +161,16 @@ public class MainActivity extends AppCompatActivity {
             gWordLocation = GLES30.glGetUniformLocation(program, "uMatrix");
 
             Matrix.setIdentityM(mMMatrix, 0);
+            Matrix.setIdentityM(mViewMatrix, 0);
+            Matrix.setIdentityM(mPMatrix, 0);
 
-//            GLES30.glFrontFace(GLES30.GL_CW);  //确定那个方向是前方
-//            GLES30.glCullFace(GLES30.GL_BACK); //剔除背面
-//            GLES30.glEnable(GLES30.GL_CULL_FACE); //开启剔除
-//            GLES30.glDisable(GLES30.GL_CULL_FACE); //取消剔除
-//            GLES30.glEnable(GLES30.GL_DEPTH_TEST);
+
+
+            GLES30.glFrontFace(GLES30.GL_CW);  //确定那个方向是前方
+            GLES30.glCullFace(GLES30.GL_BACK); //剔除背面
+            GLES30.glEnable(GLES30.GL_CULL_FACE); //开启剔除
+            GLES30.glDisable(GLES30.GL_CULL_FACE); //取消剔除
+            GLES30.glEnable(GLES30.GL_DEPTH_TEST);
 
 
 
@@ -130,6 +186,9 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onSurfaceChanged(GL10 gl, int width, int height) {
             GLES30.glViewport(0, 0, width, height);
+            float r = (float) width / height;
+            Matrix.frustumM(mPMatrix, 0, -r,  r, -1,1 , 10, 100 );
+
         }
 
         @Override
@@ -138,8 +197,11 @@ public class MainActivity extends AppCompatActivity {
             GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT|GLES30.GL_DEPTH_BUFFER_BIT);
 
             scale += 0.0001;
-//            Matrix.rotateM(mMMatrix, 0, scale, 1, 0, 0);
-            GLES30.glUniformMatrix4fv(gWordLocation, 1, false, mMMatrix, 0);
+            Matrix.setLookAtM(mViewMatrix, 0, 0, y, z, 0,0,0,0, scale , 0);
+            Matrix.rotateM(mMMatrix, 0, scale , 0, 1, 0);
+            Matrix.multiplyMM(mMVPMatrix, 0, mViewMatrix, 0, mMMatrix, 0 );
+            Matrix.multiplyMM(mMVPMatrix, 0 , mPMatrix, 0 , mMVPMatrix, 0);
+            GLES30.glUniformMatrix4fv(gWordLocation, 1, false, mMVPMatrix, 0);
             GLES30.glEnableVertexAttribArray(0);
             GLES30.glEnableVertexAttribArray(1);
             GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, VBO[0]);
