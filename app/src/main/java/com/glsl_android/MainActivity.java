@@ -24,7 +24,7 @@ public class MainActivity extends AppCompatActivity {
     private int speed = 1;
     private int x;
     private int y;
-    private int z;
+    private int z = 10;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -197,7 +197,7 @@ public class MainActivity extends AppCompatActivity {
             GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT|GLES30.GL_DEPTH_BUFFER_BIT);
 
             scale += 0.0001;
-            Matrix.setLookAtM(mViewMatrix, 0, 0, y, z, 0,0,0,0, scale , 0);
+            Matrix.setLookAtM(mViewMatrix, 0, x, y, z, x,y, 0,0, 1 , 0);
             Matrix.rotateM(mMMatrix, 0, scale , 0, 1, 0);
             Matrix.multiplyMM(mMVPMatrix, 0, mViewMatrix, 0, mMMatrix, 0 );
             Matrix.multiplyMM(mMVPMatrix, 0 , mPMatrix, 0 , mMVPMatrix, 0);
